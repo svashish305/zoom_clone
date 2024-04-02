@@ -1,11 +1,34 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
 import MeetingTypeList from "@/components/MeetingTypeList";
-import React from "react";
+import { useGetCalls } from "@/hooks/useGetCalls";
+import { formatTime } from "@/constants";
 
 const Home = () => {
-	const now = new Date();
+  const now = new Date();
+  const [mostRecentUpcomingCallStartTime, setMostRecentUpcomingCallStartTime] =
+    useState<string | null>(null);
+  const { upcomingCalls, isLoading } = useGetCalls();
 
-	const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-	const date = (new Intl.DateTimeFormat('en-US', { dateStyle: 'full' })).format(now);
+  useEffect(() => {
+    if (upcomingCalls.length > 0) {
+      const mostRecentUpcomingCall = upcomingCalls[upcomingCalls.length - 1];
+      setMostRecentUpcomingCallStartTime(
+        formatTime(new Date(mostRecentUpcomingCall?.state.startsAt!))
+      );
+    } else {
+      setMostRecentUpcomingCallStartTime(null);
+    }
+  }, [upcomingCalls]);
+
+  const time = now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const date = new Intl.DateTimeFormat("en-US", { dateStyle: "full" }).format(
+    now
+  );
   return (
     <section className="flex size-full flex-col gap-10 text-white">
       <div className="h-[300px] w-full rounded-[20px] bg-hero bg-cover">
@@ -18,7 +41,11 @@ const Home = () => {
 						rounded py-2 text-center text-base 
 						font-normal"
           >
-            Upcoming Meeting at: 12:30 PM
+            {isLoading
+              ? "Loading Upcoming Meeting..."
+              : mostRecentUpcomingCallStartTime
+              ? `Upcoming Meeting at: ${mostRecentUpcomingCallStartTime}`
+              : "No upcoming meetings"}
           </h2>
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl font-extrabold lg:text-7xl">{time}</h1>
@@ -27,7 +54,7 @@ const Home = () => {
         </div>
       </div>
 
-			<MeetingTypeList />
+      <MeetingTypeList />
     </section>
   );
 };
